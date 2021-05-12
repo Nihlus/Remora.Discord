@@ -23,7 +23,6 @@
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using Microsoft.Extensions.Caching.Memory;
 
 namespace Remora.Discord.Caching.Services
 {
@@ -52,6 +51,42 @@ namespace Remora.Discord.Caching.Services
         /// Holds the default sliding expiration value.
         /// </summary>
         private TimeSpan _defaultSlidingExpiration = TimeSpan.FromSeconds(10);
+
+        /// <summary>
+        /// Gets a value indicating whether messages should be cached.
+        /// </summary>
+        public bool ShouldCacheMessages { get; private set; }
+
+        /// <summary>
+        /// Gets a value indicating whether user presence information should be cached.
+        /// </summary>
+        public bool ShouldCachePresences { get; private set; }
+
+        /// <summary>
+        /// Enables message cache.
+        /// </summary>
+        /// <remarks>
+        /// Since large bots will receive a lot of messages this should not be enabled unless necessary.
+        /// </remarks>
+        /// <returns>The settings.</returns>
+        public CacheSettings EnableMessageCache()
+        {
+            this.ShouldCacheMessages = true;
+            return this;
+        }
+
+        /// <summary>
+        /// Enables presence cache.
+        /// </summary>
+        /// <remarks>
+        /// Since large bots will receive a lot of presence this should not be enabled unless necessary.
+        /// </remarks>
+        /// <returns>The settings.</returns>
+        public CacheSettings EnablePresenceCache()
+        {
+            this.ShouldCacheMessages = true;
+            return this;
+        }
 
         /// <summary>
         /// Sets the default absolute expiration value for types.
@@ -161,20 +196,6 @@ namespace Remora.Discord.Caching.Services
             return _slidingCacheExpirations.TryGetValue(cachedType, out var slidingExpiration)
                 ? slidingExpiration
                 : defaultExpiration.Value;
-        }
-
-        /// <summary>
-        /// Gets a set of cache options, with expirations relative to now.
-        /// </summary>
-        /// <typeparam name="T">The cache entry type.</typeparam>
-        /// <returns>The entry options.</returns>
-        public MemoryCacheEntryOptions GetEntryOptions<T>()
-        {
-            var cacheOptions = new MemoryCacheEntryOptions();
-            cacheOptions.SetAbsoluteExpiration(GetAbsoluteExpirationOrDefault<T>());
-            cacheOptions.SetSlidingExpiration(GetSlidingExpirationOrDefault<T>());
-
-            return cacheOptions;
         }
     }
 }

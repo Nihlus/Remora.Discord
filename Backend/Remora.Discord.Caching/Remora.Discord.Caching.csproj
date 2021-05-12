@@ -9,7 +9,7 @@
         <Description>
             $(BaseDescription)
 
-            This package contains memory cache functionality for the gateway and REST API.
+            This package contains cache functionality for the gateway and REST API.
         </Description>
         <PackageReleaseNotes>
             Implement the v9 Discord API.
@@ -27,7 +27,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
     </ItemGroup>
 
 </Project>

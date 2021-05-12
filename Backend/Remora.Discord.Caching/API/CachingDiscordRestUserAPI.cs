@@ -38,14 +38,14 @@ namespace Remora.Discord.Caching.API
     /// <inheritdoc />
     public class CachingDiscordRestUserAPI : DiscordRestUserAPI
     {
-        private readonly CacheService _cacheService;
+        private readonly ICacheService _cacheService;
 
         /// <inheritdoc cref="DiscordRestUserAPI(DiscordHttpClient, IOptions{JsonSerializerOptions})" />
         public CachingDiscordRestUserAPI
         (
             DiscordHttpClient discordHttpClient,
             IOptions<JsonSerializerOptions> jsonOptions,
-            CacheService cacheService
+            ICacheService cacheService
         )
             : base(discordHttpClient, jsonOptions)
         {
@@ -60,9 +60,10 @@ namespace Remora.Discord.Caching.API
         )
         {
             var key = KeyHelpers.CreateUserCacheKey(userID);
-            if (_cacheService.TryGetValue<IUser>(key, out var cachedInstance))
+            var cache = await _cacheService.GetValueAsync<IUser>(key);
+            if (cache.IsSuccess)
             {
-                return Result<IUser>.FromSuccess(cachedInstance);
+               return Result<IUser>.FromSuccess(cache.Entity);
             }
 
             var getUser = await base.GetUserAsync(userID, ct);
@@ -72,7 +73,7 @@ namespace Remora.Discord.Caching.API
             }
 
             var user = getUser.Entity;
-            _cacheService.Cache(key, user);
+            await _cacheService.CacheAsync(key, user);
 
             return getUser;
         }
@@ -92,7 +93,7 @@ namespace Remora.Discord.Caching.API
             var dm = createDM.Entity;
             var key = KeyHelpers.CreateChannelCacheKey(dm.ID);
 
-            _cacheService.Cache(key, dm);
+            await _cacheService.CacheAsync(key, dm);
 
             return createDM;
         }
@@ -101,9 +102,10 @@ namespace Remora.Discord.Caching.API
         public override async Task<Result<IUser>> GetCurrentUserAsync(CancellationToken ct = default)
         {
             var key = KeyHelpers.CreateCurrentUserCacheKey();
-            if (_cacheService.TryGetValue<IUser>(key, out var cachedInstance))
+            var cache = await _cacheService.GetValueAsync<IUser>(key);
+            if (cache.IsSuccess)
             {
-                return Result<IUser>.FromSuccess(cachedInstance);
+               return Result<IUser>.FromSuccess(cache.Entity);
             }
 
             var getUser = await base.GetCurrentUserAsync(ct);
@@ -116,8 +118,8 @@ namespace Remora.Discord.Caching.API
             var userKey = KeyHelpers.CreateUserCacheKey(user.ID);
 
             // Cache this as both a normal user and our current user
-            _cacheService.Cache(key, user);
-            _cacheService.Cache(userKey, user);
+            await _cacheService.CacheAsync(key, user);
+            await _cacheService.CacheAsync(userKey, user);
 
             return getUser;
         }
@@ -129,9 +131,10 @@ namespace Remora.Discord.Caching.API
         )
         {
             var key = KeyHelpers.CreateCurrentUserConnectionsCacheKey();
-            if (_cacheService.TryGetValue<IReadOnlyList<IConnection>>(key, out var cachedInstance))
+            var cache = await _cacheService.GetValueAsync<IReadOnlyList<IConnection>>(key);
+            if (cache.IsSuccess)
             {
-                return Result<IReadOnlyList<IConnection>>.FromSuccess(cachedInstance);
+               return Result<IReadOnlyList<IConnection>>.FromSuccess(cache.Entity);
             }
 
             var getUserConnections = await base.GetUserConnectionsAsync(ct);
@@ -141,12 +144,12 @@ namespace Remora.Discord.Caching.API
             }
 
             var connections = getUserConnections.Entity;
-            _cacheService.Cache(key, connections);
+            await _cacheService.CacheAsync(key, connections);
 
             foreach (var connection in connections)
             {
                 var connectionKey = KeyHelpers.CreateConnectionCacheKey(connection.ID);
-                _cacheService.Cache(connectionKey, connection);
+                await _cacheService.CacheAsync(connectionKey, connection);
             }
 
             return getUserConnections;
@@ -170,8 +173,8 @@ namespace Remora.Discord.Caching.API
             var key = KeyHelpers.CreateCurrentUserCacheKey();
             var userKey = KeyHelpers.CreateUserCacheKey(user.ID);
 
-            _cacheService.Cache(key, user);
-            _cacheService.Cache(userKey, user);
+            await _cacheService.CacheAsync(key, user);
+            await _cacheService.CacheAsync(userKey, user);
 
             return modifyUser;
         }
@@ -183,9 +186,10 @@ namespace Remora.Discord.Caching.API
         )
         {
             var key = KeyHelpers.CreateCurrentUserDMsCacheKey();
-            if (_cacheService.TryGetValue<IReadOnlyList<IChannel>>(key, out var cachedInstance))
+            var cache = await _cacheService.GetValueAsync<IReadOnlyList<IChannel>>(key);
+            if (cache.IsSuccess)
             {
-                return Result<IReadOnlyList<IChannel>>.FromSuccess(cachedInstance);
+               return Result<IReadOnlyList<IChannel>>.FromSuccess(cache.Entity);
             }
 
             var getUserDMs = await base.GetUserDMsAsync(ct);
@@ -195,12 +199,12 @@ namespace Remora.Discord.Caching.API
             }
 
             var userDMs = getUserDMs.Entity;
-            _cacheService.Cache(key, userDMs);
+            await _cacheService.CacheAsync(key, userDMs);
 
             foreach (var dm in userDMs)
             {
                 var channelKey = KeyHelpers.CreateChannelCacheKey(dm.ID);
-                _cacheService.Cache(channelKey, dm);
+                await _cacheService.CacheAsync(channelKey, dm);
             }
 
             return getUserDMs;

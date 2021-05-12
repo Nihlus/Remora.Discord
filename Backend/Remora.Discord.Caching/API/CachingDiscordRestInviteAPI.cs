@@ -34,13 +34,13 @@ namespace Remora.Discord.Caching.API
     /// <inheritdoc />
     public class CachingDiscordRestInviteAPI : DiscordRestInviteAPI
     {
-        private readonly CacheService _cacheService;
+        private readonly ICacheService _cacheService;
 
         /// <inheritdoc cref="DiscordRestInviteAPI(DiscordHttpClient)" />
         public CachingDiscordRestInviteAPI
         (
             DiscordHttpClient discordHttpClient,
-            CacheService cacheService
+            ICacheService cacheService
         )
             : base(discordHttpClient)
         {
@@ -57,9 +57,10 @@ namespace Remora.Discord.Caching.API
         )
         {
             var key = KeyHelpers.CreateInviteCacheKey(inviteCode);
-            if (_cacheService.TryGetValue<IInvite>(key, out var cachedInstance))
+            var cache = await _cacheService.GetValueAsync<IInvite>(key);
+            if (cache.IsSuccess)
             {
-                return Result<IInvite>.FromSuccess(cachedInstance);
+               return Result<IInvite>.FromSuccess(cache.Entity);
             }
 
             var getInvite = await base.GetInviteAsync(inviteCode, withCounts, withExpiration, ct);
@@ -69,7 +70,7 @@ namespace Remora.Discord.Caching.API
             }
 
             var invite = getInvite.Entity;
-            _cacheService.Cache(key, invite);
+            await _cacheService.CacheAsync(key, invite);
 
             return getInvite;
         }
@@ -88,7 +89,7 @@ namespace Remora.Discord.Caching.API
             }
 
             var key = KeyHelpers.CreateInviteCacheKey(inviteCode);
-            _cacheService.Evict(key);
+            await _cacheService.EvictAsync(key);
 
             return deleteInvite;
         }

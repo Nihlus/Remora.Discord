@@ -38,14 +38,14 @@ namespace Remora.Discord.Caching.API
     /// <inheritdoc />
     public class CachingDiscordRestTemplateAPI : DiscordRestTemplateAPI
     {
-        private readonly CacheService _cacheService;
+        private readonly ICacheService _cacheService;
 
         /// <inheritdoc cref="DiscordRestTemplateAPI(DiscordHttpClient, IOptions{JsonSerializerOptions})" />
         public CachingDiscordRestTemplateAPI
         (
             DiscordHttpClient discordHttpClient,
             IOptions<JsonSerializerOptions> jsonOptions,
-            CacheService cacheService
+            ICacheService cacheService
         )
             : base(discordHttpClient, jsonOptions)
         {
@@ -60,9 +60,10 @@ namespace Remora.Discord.Caching.API
         )
         {
             var key = KeyHelpers.CreateTemplateCacheKey(templateCode);
-            if (_cacheService.TryGetValue<ITemplate>(key, out var cachedInstance))
+            var cache = await _cacheService.GetValueAsync<ITemplate>(key);
+            if (cache.IsSuccess)
             {
-                return Result<ITemplate>.FromSuccess(cachedInstance);
+               return Result<ITemplate>.FromSuccess(cache.Entity);
             }
 
             var getTemplate = await base.GetTemplateAsync(templateCode, ct);
@@ -72,7 +73,7 @@ namespace Remora.Discord.Caching.API
             }
 
             var template = getTemplate.Entity;
-            _cacheService.Cache(key, template);
+            await _cacheService.CacheAsync(key, template);
 
             return getTemplate;
         }
@@ -95,7 +96,7 @@ namespace Remora.Discord.Caching.API
             var template = createTemplate.Entity;
             var key = KeyHelpers.CreateTemplateCacheKey(template.Code);
 
-            _cacheService.Cache(key, template);
+            await _cacheService.CacheAsync(key, template);
 
             return createTemplate;
         }
@@ -115,7 +116,7 @@ namespace Remora.Discord.Caching.API
             }
 
             var key = KeyHelpers.CreateTemplateCacheKey(templateCode);
-            _cacheService.Evict(key);
+            await _cacheService.EvictAsync(key);
 
             return deleteTemplate;
         }
@@ -128,9 +129,10 @@ namespace Remora.Discord.Caching.API
         )
         {
             var key = KeyHelpers.CreateGuildTemplatesCacheKey(guildID);
-            if (_cacheService.TryGetValue<IReadOnlyList<ITemplate>>(key, out var cachedInstance))
+            var cache = await _cacheService.GetValueAsync<IReadOnlyList<ITemplate>>(key);
+            if (cache.IsSuccess)
             {
-                return Result<IReadOnlyList<ITemplate>>.FromSuccess(cachedInstance);
+               return Result<IReadOnlyList<ITemplate>>.FromSuccess(cache.Entity);
             }
 
             var getTemplates = await base.GetGuildTemplatesAsync(guildID, ct);
@@ -140,12 +142,12 @@ namespace Remora.Discord.Caching.API
             }
 
             var templates = getTemplates.Entity;
-            _cacheService.Cache(key, templates);
+            await _cacheService.CacheAsync(key, templates);
 
             foreach (var template in templates)
             {
                 var templateKey = KeyHelpers.CreateTemplateCacheKey(template.Code);
-                _cacheService.Cache(templateKey, template);
+                await _cacheService.CacheAsync(templateKey, template);
             }
 
             return getTemplates;
@@ -170,7 +172,7 @@ namespace Remora.Discord.Caching.API
             var template = modifyTemplate.Entity;
             var key = KeyHelpers.CreateTemplateCacheKey(templateCode);
 
-            _cacheService.Cache(key, template);
+            await _cacheService.CacheAsync(key, template);
 
             return modifyTemplate;
         }
@@ -192,7 +194,7 @@ namespace Remora.Discord.Caching.API
             var template = syncTemplate.Entity;
             var key = KeyHelpers.CreateTemplateCacheKey(templateCode);
 
-            _cacheService.Cache(key, template);
+            await _cacheService.CacheAsync(key, template);
 
             return syncTemplate;
         }
@@ -215,7 +217,7 @@ namespace Remora.Discord.Caching.API
             var guild = createGuild.Entity;
             var key = KeyHelpers.CreateGuildCacheKey(guild.ID);
 
-            _cacheService.Cache(key, guild);
+            await _cacheService.CacheAsync(key, guild);
 
             return createGuild;
         }

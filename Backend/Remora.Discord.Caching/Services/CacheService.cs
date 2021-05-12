@@ -21,87 +21,96 @@
 //
 
 using System;
-using System.Diagnostics.CodeAnalysis;
-using Microsoft.Extensions.Caching.Memory;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Remora.Discord.API.Abstractions.Objects;
 using Remora.Discord.API.Objects;
+using Remora.Discord.Caching.Clients;
+using Remora.Results;
 
 namespace Remora.Discord.Caching.Services
 {
-    /// <summary>
-    /// Handles cache insert/evict operations for various types.
-    /// </summary>
-    public class CacheService
+    /// <inheritdoc />
+    public class CacheService : ICacheService
     {
-        private readonly IMemoryCache _memoryCache;
+        private readonly ICacheClient _cacheClient;
         private readonly CacheSettings _cacheSettings;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CacheService"/> class.
         /// </summary>
-        /// <param name="memoryCache">The memory cache.</param>
+        /// <param name="cacheClient">The cache manager.</param>
         /// <param name="cacheSettings">The cache settings.</param>
-        public CacheService(IMemoryCache memoryCache, IOptions<CacheSettings> cacheSettings)
+        public CacheService(IOptions<CacheSettings> cacheSettings, ICacheClient? cacheClient = null)
         {
-            _memoryCache = memoryCache;
             _cacheSettings = cacheSettings.Value;
+            _cacheClient = cacheClient ?? throw new InvalidOperationException("No cache client was provided in the service collection.\nInstall the client you want to use (e.g. Remora.Discord.Caching.Memory) and configure it through Services.AddDiscordCaching(b => b.UseXXX()).");
         }
 
-        /// <summary>
-        /// Caches a value. Certain instance types may have specializations which cache more than one value from the
-        /// instance.
-        /// </summary>
-        /// <param name="key">The cache key.</param>
-        /// <param name="instance">The instance.</param>
-        /// <typeparam name="TInstance">The instance type.</typeparam>
-        public void Cache<TInstance>(object key, TInstance instance)
-            where TInstance : class
+        /// <inheritdoc />
+        public Task CacheAsync(CacheKey key, IRole role)
         {
-            Action cacheAction = instance switch
-            {
-                IWebhook webhook => () => CacheWebhook(key, webhook),
-                ITemplate template => () => CacheTemplate(key, template),
-                IIntegration integration => () => CacheIntegration(key, integration),
-                IBan ban => () => CacheBan(key, ban),
-                IGuildMember member => () => CacheGuildMember(key, member),
-                IGuildPreview preview => () => CacheGuildPreview(key, preview),
-                IGuild guild => () => CacheGuild(key, guild),
-                IEmoji emoji => () => CacheEmoji(key, emoji),
-                IInvite invite => () => CacheInvite(key, invite),
-                IMessage message => () => CacheMessage(key, message),
-                IChannel channel => () => CacheChannel(key, channel),
-                _ => () => CacheInstance(key, instance)
-            };
+            return _cacheClient.StoreAsync(key, role);
+        }
 
-            cacheAction();
+        /// <inheritdoc />
+        public Task CacheAsync(CacheKey key, IVoiceRegion voiceRegion)
+        {
+            return _cacheClient.StoreAsync(key, voiceRegion);
         }
 
         /// <summary>
         /// Attempts to retrieve a value from the cache.
         /// </summary>
         /// <param name="key">The cache key.</param>
-        /// <param name="cachedInstance">The instance, if any.</param>
         /// <typeparam name="TInstance">The instance type.</typeparam>
-        /// <returns>true if an instance was retrieved; otherwise, false.</returns>
-        public bool TryGetValue<TInstance>(object key, [NotNullWhen(true)] out TInstance? cachedInstance)
-            where TInstance : class
+        /// <returns>value from the cache provider.</returns>
+        public Task<Result<TInstance>> GetValueAsync<TInstance>(CacheKey key) where TInstance : notnull
         {
-            return _memoryCache.TryGetValue(key, out cachedInstance);
+            return _cacheClient.RetrieveAsync<TInstance>(key);
         }
 
-        /// <summary>
-        /// Evicts the instance with the given key from the cache.
-        /// </summary>
-        /// <param name="key">The cache key.</param>
-        public void Evict(object key)
+        /// <inheritdoc />
+        public Task EvictAsync(CacheKey key)
         {
-            _memoryCache.Remove(key);
+            return _cacheClient.EvictAsync(key);
         }
 
-        private void CacheWebhook(object key, IWebhook webhook)
+        /// <inheritdoc />
+        public Task CacheAsync<T>(CacheKey key, IReadOnlyList<T> items)
         {
-            CacheInstance(key, webhook);
+            return _cacheClient.StoreAsync(key, items);
+        }
+
+        /// <inheritdoc />
+        public Task CacheAsync(CacheKey key, IConnection connection)
+        {
+            return _cacheClient.StoreAsync(key, connection);
+        }
+
+        /// <inheritdoc />
+        public Task CacheAsync(CacheKey key, IApplication application)
+        {
+            return _cacheClient.StoreAsync(key, application);
+        }
+
+        /// <inheritdoc />
+        public Task CacheAsync(CacheKey key, IWelcomeScreen welcomeScreen)
+        {
+            return _cacheClient.StoreAsync(key, welcomeScreen);
+        }
+
+        /// <inheritdoc />
+        public Task CacheAsync(CacheKey key, IGuildWidget guildWidget)
+        {
+            return _cacheClient.StoreAsync(key, guildWidget);
+        }
+
+        /// <inheritdoc />
+        public async Task CacheAsync(CacheKey key, IWebhook webhook)
+        {
+            await _cacheClient.StoreAsync(key, webhook);
 
             if (!webhook.User.HasValue)
             {
@@ -110,20 +119,22 @@ namespace Remora.Discord.Caching.Services
 
             var user = webhook.User.Value;
             var userKey = KeyHelpers.CreateUserCacheKey(user.ID);
-            Cache(userKey, user);
+            await CacheAsync(userKey, user);
         }
 
-        private void CacheTemplate(object key, ITemplate template)
+        /// <inheritdoc />
+        public async Task CacheAsync(CacheKey key, ITemplate template)
         {
-            CacheInstance(key, template);
+            await _cacheClient.StoreAsync(key, template);
 
             var creatorKey = KeyHelpers.CreateUserCacheKey(template.Creator.ID);
-            Cache(creatorKey, template.Creator);
+            await CacheAsync(creatorKey, template.Creator);
         }
 
-        private void CacheIntegration(object key, IIntegration integration)
+        /// <inheritdoc />
+        public async Task CacheAsync(CacheKey key, IIntegration integration)
         {
-            CacheInstance(key, integration);
+            await _cacheClient.StoreAsync(key, integration);
 
             if (!integration.User.HasValue)
             {
@@ -132,20 +143,22 @@ namespace Remora.Discord.Caching.Services
 
             var user = integration.User.Value;
             var userKey = KeyHelpers.CreateUserCacheKey(user.ID);
-            Cache(userKey, user);
+            await CacheAsync(userKey, user);
         }
 
-        private void CacheBan(object key, IBan ban)
+        /// <inheritdoc />
+        public async Task CacheAsync(CacheKey key, IBan ban)
         {
-            CacheInstance(key, ban);
+            await _cacheClient.StoreAsync(key, ban);
 
             var userKey = KeyHelpers.CreateUserCacheKey(ban.User.ID);
-            Cache(userKey, ban.User);
+            await CacheAsync(userKey, ban.User);
         }
 
-        private void CacheGuildMember(object key, IGuildMember member)
+        /// <inheritdoc />
+        public async Task CacheAsync(CacheKey key, IGuildMember member)
         {
-            CacheInstance(key, member);
+            await _cacheClient.StoreAsync(key, member);
 
             if (!member.User.HasValue)
             {
@@ -154,12 +167,13 @@ namespace Remora.Discord.Caching.Services
 
             var user = member.User.Value;
             var userKey = KeyHelpers.CreateUserCacheKey(user.ID);
-            Cache(userKey, user);
+            await CacheAsync(userKey, user);
         }
 
-        private void CacheGuildPreview(object key, IGuildPreview preview)
+        /// <inheritdoc />
+        public async Task CacheAsync(CacheKey key, IGuildPreview preview)
         {
-            CacheInstance(key, preview);
+            await _cacheClient.StoreAsync(key, preview);
 
             foreach (var emoji in preview.Emojis)
             {
@@ -169,13 +183,14 @@ namespace Remora.Discord.Caching.Services
                 }
 
                 var emojiKey = KeyHelpers.CreateEmojiCacheKey(preview.ID, emoji.ID.Value);
-                Cache(emojiKey, emoji);
+                await CacheAsync(emojiKey, emoji);
             }
         }
 
-        private void CacheGuild(object key, IGuild guild)
+        /// <inheritdoc />
+        public async Task CacheAsync(CacheKey key, IGuild guild)
         {
-            CacheInstance(key, guild);
+            await _cacheClient.StoreAsync(key, guild);
 
             if (guild.Channels.HasValue)
             {
@@ -189,12 +204,12 @@ namespace Remora.Discord.Caching.Services
                         {
                             // Polyfill the instance with contextual data - bit of a cheat, but it's okay in this
                             // instance
-                            Cache(key, record with { GuildID = guild.ID });
+                            await CacheAsync(key, record with { GuildID = guild.ID });
                         }
                     }
                     else
                     {
-                        Cache(channelKey, channel);
+                        await CacheAsync(channelKey, channel);
                     }
                 }
             }
@@ -207,15 +222,12 @@ namespace Remora.Discord.Caching.Services
                 }
 
                 var emojiKey = KeyHelpers.CreateEmojiCacheKey(guild.ID, emoji.ID.Value);
-                Cache(emojiKey, emoji);
+                await CacheAsync(emojiKey, emoji);
             }
 
             if (guild.Members.HasValue)
             {
-                var membersKey = KeyHelpers.CreateGuildMembersKey(guild.ID, default, default);
-                Cache(membersKey, guild.Members.Value!);
-
-                foreach (var guildMember in guild.Members.Value!)
+                foreach (var guildMember in guild.Members.Value)
                 {
                     if (!guildMember.User.HasValue)
                     {
@@ -223,23 +235,21 @@ namespace Remora.Discord.Caching.Services
                     }
 
                     var memberKey = KeyHelpers.CreateGuildMemberKey(guild.ID, guildMember.User.Value.ID);
-                    Cache(memberKey, guildMember);
+                    await CacheAsync(memberKey, guildMember);
                 }
             }
-
-            var rolesKey = KeyHelpers.CreateGuildRolesCacheKey(guild.ID);
-            Cache(rolesKey, guild.Roles);
 
             foreach (var role in guild.Roles)
             {
                 var roleKey = KeyHelpers.CreateGuildRoleCacheKey(guild.ID, role.ID);
-                Cache(roleKey, role);
+                await CacheAsync(roleKey, role);
             }
         }
 
-        private void CacheEmoji(object key, IEmoji emoji)
+        /// <inheritdoc />
+        public async Task CacheAsync(CacheKey key, IEmoji emoji)
         {
-            CacheInstance(key, emoji);
+            await _cacheClient.StoreAsync(key, emoji);
 
             if (!emoji.User.HasValue)
             {
@@ -248,12 +258,13 @@ namespace Remora.Discord.Caching.Services
 
             var creator = emoji.User.Value;
             var creatorKey = KeyHelpers.CreateUserCacheKey(creator.ID);
-            Cache(creatorKey, creator);
+            await CacheAsync(creatorKey, creator);
         }
 
-        private void CacheInvite(object key, IInvite invite)
+        /// <inheritdoc />
+        public async Task CacheAsync(CacheKey key, IInvite invite)
         {
-            CacheInstance(key, invite);
+            await _cacheClient.StoreAsync(key, invite);
 
             if (!invite.Inviter.HasValue)
             {
@@ -262,15 +273,21 @@ namespace Remora.Discord.Caching.Services
 
             var inviter = invite.Inviter.Value;
             var inviterKey = KeyHelpers.CreateUserCacheKey(inviter.ID);
-            Cache(inviterKey, inviter);
+            await CacheAsync(inviterKey, inviter);
         }
 
-        private void CacheMessage(object key, IMessage message)
+        /// <inheritdoc />
+        public async Task CacheAsync(CacheKey key, IMessage message)
         {
-            CacheInstance(key, message);
+            if (!_cacheSettings.ShouldCacheMessages)
+            {
+                return;
+            }
+
+            await _cacheClient.StoreAsync(key, message);
 
             var authorKey = KeyHelpers.CreateUserCacheKey(message.Author.ID);
-            Cache(authorKey, message.Author);
+            await CacheAsync(authorKey, message.Author);
 
             if (!message.ReferencedMessage.HasValue || message.ReferencedMessage.Value is null)
             {
@@ -284,12 +301,13 @@ namespace Remora.Discord.Caching.Services
                 referencedMessage.ID
             );
 
-            Cache(referencedMessageKey, referencedMessage);
+            await CacheAsync(referencedMessageKey, referencedMessage);
         }
 
-        private void CacheChannel(object key, IChannel channel)
+        /// <inheritdoc />
+        public async Task CacheAsync(CacheKey key, IChannel channel)
         {
-            CacheInstance(key, channel);
+            await _cacheClient.StoreAsync(key, channel);
             if (!channel.Recipients.HasValue)
             {
                 return;
@@ -298,20 +316,20 @@ namespace Remora.Discord.Caching.Services
             foreach (var recipient in channel.Recipients.Value!)
             {
                 var recipientKey = KeyHelpers.CreateUserCacheKey(recipient.ID);
-                Cache(recipientKey, recipient);
+                await CacheAsync(recipientKey, recipient);
             }
         }
 
-        /// <summary>
-        /// Caches an instance using the default entry options for that instance type.
-        /// </summary>
-        /// <param name="key">The cache key.</param>
-        /// <param name="instance">The instance.</param>
-        /// <typeparam name="TInstance">The instance type.</typeparam>
-        private void CacheInstance<TInstance>(object key, TInstance instance)
-            where TInstance : class
+        /// <inheritdoc />
+        public Task CacheAsync(CacheKey key, IUser user)
         {
-            _memoryCache.Set(key, instance, _cacheSettings.GetEntryOptions<TInstance>());
+            return _cacheClient.StoreAsync(key, user);
+        }
+
+        /// <inheritdoc />
+        public Task CacheAsync(CacheKey key, IPresence presence)
+        {
+            return _cacheSettings.ShouldCachePresences ? _cacheClient.StoreAsync(key, presence) : Task.CompletedTask;
         }
     }
 }

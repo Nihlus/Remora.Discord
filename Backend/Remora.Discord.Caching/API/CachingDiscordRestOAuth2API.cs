@@ -33,13 +33,13 @@ namespace Remora.Discord.Caching.API
     /// <inheritdoc />
     public class CachingDiscordRestOAuth2API : DiscordRestOAuth2API
     {
-        private readonly CacheService _cacheService;
+        private readonly ICacheService _cacheService;
 
         /// <inheritdoc cref="DiscordRestOAuth2API(DiscordHttpClient)" />
         public CachingDiscordRestOAuth2API
         (
             DiscordHttpClient discordHttpClient,
-            CacheService cacheService
+            ICacheService cacheService
         )
             : base(discordHttpClient)
         {
@@ -53,9 +53,10 @@ namespace Remora.Discord.Caching.API
         )
         {
             var key = KeyHelpers.CreateCurrentApplicationCacheKey();
-            if (_cacheService.TryGetValue<IApplication>(key, out var cachedInstance))
+            var cache = await _cacheService.GetValueAsync<IApplication>(key);
+            if (cache.IsSuccess)
             {
-                return Result<IApplication>.FromSuccess(cachedInstance);
+               return Result<IApplication>.FromSuccess(cache.Entity);
             }
 
             var getCurrent = await base.GetCurrentBotApplicationInformationAsync(ct);
@@ -65,7 +66,7 @@ namespace Remora.Discord.Caching.API
             }
 
             var application = getCurrent.Entity;
-            _cacheService.Cache(key, application);
+            await _cacheService.CacheAsync(key, application);
 
             return getCurrent;
         }

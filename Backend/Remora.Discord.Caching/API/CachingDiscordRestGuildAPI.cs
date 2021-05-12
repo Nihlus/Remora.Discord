@@ -42,14 +42,14 @@ namespace Remora.Discord.Caching.API
     /// </summary>
     public class CachingDiscordRestGuildAPI : DiscordRestGuildAPI
     {
-        private readonly CacheService _cacheService;
+        private readonly ICacheService _cacheService;
 
         /// <inheritdoc cref="DiscordRestGuildAPI" />
         public CachingDiscordRestGuildAPI
         (
             DiscordHttpClient discordHttpClient,
             IOptions<JsonSerializerOptions> jsonOptions,
-            CacheService cacheService
+            ICacheService cacheService
         )
             : base(discordHttpClient, jsonOptions)
         {
@@ -98,7 +98,7 @@ namespace Remora.Discord.Caching.API
 
             var guild = createResult.Entity;
             var key = KeyHelpers.CreateGuildCacheKey(guild.ID);
-            _cacheService.Cache(key, guild);
+            await _cacheService.CacheAsync(key, guild);
 
             return createResult;
         }
@@ -112,9 +112,10 @@ namespace Remora.Discord.Caching.API
         )
         {
             var key = KeyHelpers.CreateGuildCacheKey(guildID);
-            if (_cacheService.TryGetValue<IGuild>(key, out var cachedInstance))
+            var cache = await _cacheService.GetValueAsync<IGuild>(key);
+            if (cache.IsSuccess)
             {
-                return Result<IGuild>.FromSuccess(cachedInstance);
+               return Result<IGuild>.FromSuccess(cache.Entity);
             }
 
             var getResult = await base.GetGuildAsync(guildID, withCounts, ct);
@@ -124,7 +125,7 @@ namespace Remora.Discord.Caching.API
             }
 
             var guild = getResult.Entity;
-            _cacheService.Cache(key, guild);
+            await _cacheService.CacheAsync(key, guild);
 
             return getResult;
         }
@@ -137,9 +138,10 @@ namespace Remora.Discord.Caching.API
         )
         {
             var key = KeyHelpers.CreateGuildPreviewCacheKey(guildID);
-            if (_cacheService.TryGetValue<IGuildPreview>(key, out var cachedInstance))
+            var cache = await _cacheService.GetValueAsync<IGuildPreview>(key);
+            if (cache.IsSuccess)
             {
-                return Result<IGuildPreview>.FromSuccess(cachedInstance);
+               return Result<IGuildPreview>.FromSuccess(cache.Entity);
             }
 
             var getResult = await base.GetGuildPreviewAsync(guildID, ct);
@@ -149,7 +151,7 @@ namespace Remora.Discord.Caching.API
             }
 
             var guildPreview = getResult.Entity;
-            _cacheService.Cache(key, guildPreview);
+            await _cacheService.CacheAsync(key, guildPreview);
 
             return getResult;
         }
@@ -212,7 +214,7 @@ namespace Remora.Discord.Caching.API
 
             var guild = modifyResult.Entity;
             var key = KeyHelpers.CreateGuildCacheKey(guild.ID);
-            _cacheService.Cache(key, guild);
+            await _cacheService.CacheAsync(key, guild);
 
             return modifyResult;
         }
@@ -232,7 +234,7 @@ namespace Remora.Discord.Caching.API
             }
 
             var key = KeyHelpers.CreateGuildCacheKey(guildID);
-            _cacheService.Evict(key);
+            await _cacheService.EvictAsync(key);
 
             return deleteResult;
         }
@@ -245,9 +247,10 @@ namespace Remora.Discord.Caching.API
         )
         {
             var key = KeyHelpers.CreateGuildChannelsCacheKey(guildID);
-            if (_cacheService.TryGetValue<IReadOnlyList<IChannel>>(key, out var cachedInstance))
+            var cache = await _cacheService.GetValueAsync<IReadOnlyList<IChannel>>(key);
+            if (cache.IsSuccess)
             {
-                return Result<IReadOnlyList<IChannel>>.FromSuccess(cachedInstance);
+               return Result<IReadOnlyList<IChannel>>.FromSuccess(cache.Entity);
             }
 
             var getResult = await base.GetGuildChannelsAsync(guildID, ct);
@@ -257,12 +260,12 @@ namespace Remora.Discord.Caching.API
             }
 
             var channels = getResult.Entity;
-            _cacheService.Cache(key, channels);
+            await _cacheService.CacheAsync(key, channels);
 
             foreach (var channel in channels)
             {
                 var channelKey = KeyHelpers.CreateChannelCacheKey(channel.ID);
-                _cacheService.Cache(channelKey, channel);
+                await _cacheService.CacheAsync(channelKey, channel);
             }
 
             return getResult;
@@ -306,9 +309,9 @@ namespace Remora.Discord.Caching.API
                 return createResult;
             }
 
-            var guild = createResult.Entity;
-            var key = KeyHelpers.CreateGuildCacheKey(guild.ID);
-            _cacheService.Cache(key, guild);
+            var channel = createResult.Entity;
+            var key = KeyHelpers.CreateChannelCacheKey(channel.ID);
+            await _cacheService.CacheAsync(key, channel);
 
             return createResult;
         }
@@ -322,9 +325,10 @@ namespace Remora.Discord.Caching.API
         )
         {
             var key = KeyHelpers.CreateGuildMemberKey(guildID, userID);
-            if (_cacheService.TryGetValue<IGuildMember>(key, out var cachedInstance))
+            var cache = await _cacheService.GetValueAsync<IGuildMember>(key);
+            if (cache.IsSuccess)
             {
-                return Result<IGuildMember>.FromSuccess(cachedInstance);
+               return Result<IGuildMember>.FromSuccess(cache.Entity);
             }
 
             var getResult = await base.GetGuildMemberAsync(guildID, userID, ct);
@@ -339,7 +343,7 @@ namespace Remora.Discord.Caching.API
                 return getResult;
             }
 
-            _cacheService.Cache(key, guildMember);
+            await _cacheService.CacheAsync(key, guildMember);
             return getResult;
         }
 
@@ -353,9 +357,10 @@ namespace Remora.Discord.Caching.API
         )
         {
             var collectionKey = KeyHelpers.CreateGuildMembersKey(guildID, limit, after);
-            if (_cacheService.TryGetValue<IReadOnlyList<IGuildMember>>(collectionKey, out var cachedInstance))
+            var cache = await _cacheService.GetValueAsync<IReadOnlyList<IGuildMember>>(collectionKey);
+            if (cache.IsSuccess)
             {
-                return Result<IReadOnlyList<IGuildMember>>.FromSuccess(cachedInstance);
+               return Result<IReadOnlyList<IGuildMember>>.FromSuccess(cache.Entity);
             }
 
             var getResult = await base.ListGuildMembersAsync(guildID, limit, after, ct);
@@ -365,7 +370,7 @@ namespace Remora.Discord.Caching.API
             }
 
             var members = getResult.Entity;
-            _cacheService.Cache(collectionKey, members);
+            await _cacheService.CacheAsync(collectionKey, members);
 
             foreach (var member in members)
             {
@@ -375,7 +380,7 @@ namespace Remora.Discord.Caching.API
                 }
 
                 var key = KeyHelpers.CreateGuildMemberKey(guildID, member.User.Value.ID);
-                _cacheService.Cache(key, member);
+                await _cacheService.CacheAsync(key, member);
             }
 
             return getResult;
@@ -418,7 +423,7 @@ namespace Remora.Discord.Caching.API
             }
 
             var key = KeyHelpers.CreateGuildMemberKey(guildID, userID);
-            _cacheService.Cache(key, member);
+            await _cacheService.CacheAsync(key, member);
             return getResult;
         }
 
@@ -437,7 +442,7 @@ namespace Remora.Discord.Caching.API
             }
 
             var memberKey = KeyHelpers.CreateGuildMemberKey(guildID, userID);
-            _cacheService.Evict(memberKey);
+            await _cacheService.EvictAsync(memberKey);
 
             return removeMember;
         }
@@ -450,9 +455,10 @@ namespace Remora.Discord.Caching.API
         )
         {
             var collectionKey = KeyHelpers.CreateGuildBansCacheKey(guildID);
-            if (_cacheService.TryGetValue<IReadOnlyList<IBan>>(collectionKey, out var cachedInstance))
+            var cache = await _cacheService.GetValueAsync<IReadOnlyList<IBan>>(collectionKey);
+            if (cache.IsSuccess)
             {
-                return Result<IReadOnlyList<IBan>>.FromSuccess(cachedInstance);
+               return Result<IReadOnlyList<IBan>>.FromSuccess(cache.Entity);
             }
 
             var getResult = await base.GetGuildBansAsync(guildID, ct);
@@ -462,12 +468,12 @@ namespace Remora.Discord.Caching.API
             }
 
             var bans = getResult.Entity;
-            _cacheService.Cache(collectionKey, bans);
+            await _cacheService.CacheAsync(collectionKey, bans);
 
             foreach (var ban in bans)
             {
                 var key = KeyHelpers.CreateGuildBanCacheKey(guildID, ban.User.ID);
-                _cacheService.Cache(key, ban);
+                await _cacheService.CacheAsync(key, ban);
             }
 
             return getResult;
@@ -482,9 +488,10 @@ namespace Remora.Discord.Caching.API
         )
         {
             var key = KeyHelpers.CreateGuildBanCacheKey(guildID, userID);
-            if (_cacheService.TryGetValue<IBan>(key, out var cachedInstance))
+            var cache = await _cacheService.GetValueAsync<IBan>(key);
+            if (cache.IsSuccess)
             {
-                return Result<IBan>.FromSuccess(cachedInstance);
+               return Result<IBan>.FromSuccess(cache.Entity);
             }
 
             var getResult = await base.GetGuildBanAsync(guildID, userID, ct);
@@ -494,7 +501,7 @@ namespace Remora.Discord.Caching.API
             }
 
             var ban = getResult.Entity;
-            _cacheService.Cache(key, ban);
+            await _cacheService.CacheAsync(key, ban);
 
             return getResult;
         }
@@ -514,7 +521,7 @@ namespace Remora.Discord.Caching.API
             }
 
             var key = KeyHelpers.CreateGuildBanCacheKey(guildID, userID);
-            _cacheService.Evict(key);
+            await _cacheService.EvictAsync(key);
 
             return deleteResult;
         }
@@ -527,9 +534,10 @@ namespace Remora.Discord.Caching.API
         )
         {
             var collectionKey = KeyHelpers.CreateGuildRolesCacheKey(guildID);
-            if (_cacheService.TryGetValue<IReadOnlyList<IRole>>(collectionKey, out var cachedInstance))
+            var cache = await _cacheService.GetValueAsync<IReadOnlyList<IRole>>(collectionKey);
+            if (cache.IsSuccess)
             {
-                return Result<IReadOnlyList<IRole>>.FromSuccess(cachedInstance);
+               return Result<IReadOnlyList<IRole>>.FromSuccess(cache.Entity);
             }
 
             var getRoles = await base.GetGuildRolesAsync(guildID, ct);
@@ -539,12 +547,12 @@ namespace Remora.Discord.Caching.API
             }
 
             var roles = getRoles.Entity;
-            _cacheService.Cache(collectionKey, roles);
+            await _cacheService.CacheAsync(collectionKey, roles);
 
             foreach (var role in roles)
             {
                 var key = KeyHelpers.CreateGuildRoleCacheKey(guildID, role.ID);
-                _cacheService.Cache(key, role);
+                await _cacheService.CacheAsync(key, role);
             }
 
             return getRoles;
@@ -580,7 +588,7 @@ namespace Remora.Discord.Caching.API
 
             var role = createResult.Entity;
             var key = KeyHelpers.CreateGuildRoleCacheKey(guildID, role.ID);
-            _cacheService.Cache(key, role);
+            await _cacheService.CacheAsync(key, role);
 
             return createResult;
         }
@@ -602,12 +610,12 @@ namespace Remora.Discord.Caching.API
 
             var roles = modifyResult.Entity;
             var collectionKey = KeyHelpers.CreateGuildRolesCacheKey(guildID);
-            _cacheService.Cache(collectionKey, roles);
+            await _cacheService.CacheAsync(collectionKey, roles);
 
             foreach (var role in roles)
             {
                 var key = KeyHelpers.CreateGuildRoleCacheKey(guildID, role.ID);
-                _cacheService.Cache(key, role);
+                await _cacheService.CacheAsync(key, role);
             }
 
             return modifyResult;
@@ -645,7 +653,7 @@ namespace Remora.Discord.Caching.API
 
             var role = modifyResult.Entity;
             var key = KeyHelpers.CreateGuildRoleCacheKey(guildID, roleID);
-            _cacheService.Cache(key, role);
+            await _cacheService.CacheAsync(key, role);
 
             return modifyResult;
         }
@@ -665,7 +673,7 @@ namespace Remora.Discord.Caching.API
             }
 
             var key = KeyHelpers.CreateGuildRoleCacheKey(guildId, roleID);
-            _cacheService.Evict(key);
+            await _cacheService.EvictAsync(key);
 
             return deleteResult;
         }
@@ -678,9 +686,10 @@ namespace Remora.Discord.Caching.API
         )
         {
             var collectionKey = KeyHelpers.CreateGuildVoiceRegionsCacheKey(guildID);
-            if (_cacheService.TryGetValue<IReadOnlyList<IVoiceRegion>>(collectionKey, out var cachedInstance))
+            var cache = await _cacheService.GetValueAsync<IReadOnlyList<IVoiceRegion>>(collectionKey);
+            if (cache.IsSuccess)
             {
-                return Result<IReadOnlyList<IVoiceRegion>>.FromSuccess(cachedInstance);
+               return Result<IReadOnlyList<IVoiceRegion>>.FromSuccess(cache.Entity);
             }
 
             var getResult = await base.GetGuildVoiceRegionsAsync(guildID, ct);
@@ -691,12 +700,12 @@ namespace Remora.Discord.Caching.API
             }
 
             var voiceRegions = getResult.Entity;
-            _cacheService.Cache(collectionKey, voiceRegions);
+            await _cacheService.CacheAsync(collectionKey, voiceRegions);
 
             foreach (var voiceRegion in voiceRegions)
             {
                 var key = KeyHelpers.CreateGuildVoiceRegionCacheKey(guildID, voiceRegion.ID);
-                _cacheService.Cache(key, voiceRegion);
+                await _cacheService.CacheAsync(key, voiceRegion);
             }
 
             return getResult;
@@ -710,9 +719,10 @@ namespace Remora.Discord.Caching.API
         )
         {
             var collectionKey = KeyHelpers.CreateGuildInvitesCacheKey(guildID);
-            if (_cacheService.TryGetValue<IReadOnlyList<IInvite>>(collectionKey, out var cachedInstance))
+            var cache = await _cacheService.GetValueAsync<IReadOnlyList<IInvite>>(collectionKey);
+            if (cache.IsSuccess)
             {
-                return Result<IReadOnlyList<IInvite>>.FromSuccess(cachedInstance);
+               return Result<IReadOnlyList<IInvite>>.FromSuccess(cache.Entity);
             }
 
             var getResult = await base.GetGuildInvitesAsync(guildID, ct);
@@ -723,12 +733,12 @@ namespace Remora.Discord.Caching.API
             }
 
             var invites = getResult.Entity;
-            _cacheService.Cache(collectionKey, invites);
+            await _cacheService.CacheAsync(collectionKey, invites);
 
             foreach (var invite in invites)
             {
                 var key = KeyHelpers.CreateInviteCacheKey(invite.Code);
-                _cacheService.Cache(key, invite);
+                await _cacheService.CacheAsync(key, invite);
             }
 
             return getResult;
@@ -743,9 +753,10 @@ namespace Remora.Discord.Caching.API
         )
         {
             var collectionKey = KeyHelpers.CreateGuildIntegrationsCacheKey(guildID);
-            if (_cacheService.TryGetValue<IReadOnlyList<IIntegration>>(collectionKey, out var cachedInstance))
+            var cache = await _cacheService.GetValueAsync<IReadOnlyList<IIntegration>>(collectionKey);
+            if (cache.IsSuccess)
             {
-                return Result<IReadOnlyList<IIntegration>>.FromSuccess(cachedInstance);
+               return Result<IReadOnlyList<IIntegration>>.FromSuccess(cache.Entity);
             }
 
             var getResult = await base.GetGuildIntegrationsAsync(guildID, includeApplications, ct);
@@ -756,12 +767,12 @@ namespace Remora.Discord.Caching.API
             }
 
             var integrations = getResult.Entity;
-            _cacheService.Cache(collectionKey, integrations);
+            await _cacheService.CacheAsync(collectionKey, integrations);
 
             foreach (var integration in integrations)
             {
                 var key = KeyHelpers.CreateGuildIntegrationCacheKey(guildID, integration.ID);
-                _cacheService.Cache(key, integration);
+                await _cacheService.CacheAsync(key, integration);
             }
 
             return getResult;
@@ -775,9 +786,10 @@ namespace Remora.Discord.Caching.API
         )
         {
             var key = KeyHelpers.CreateGuildWidgetSettingsCacheKey(guildID);
-            if (_cacheService.TryGetValue<IGuildWidget>(key, out var cachedInstance))
+            var cache = await _cacheService.GetValueAsync<IGuildWidget>(key);
+            if (cache.IsSuccess)
             {
-                return Result<IGuildWidget>.FromSuccess(cachedInstance);
+               return Result<IGuildWidget>.FromSuccess(cache.Entity);
             }
 
             var getResult = await base.GetGuildWidgetSettingsAsync(guildID, ct);
@@ -787,7 +799,7 @@ namespace Remora.Discord.Caching.API
             }
 
             var widget = getResult.Entity;
-            _cacheService.Cache(key, widget);
+            await _cacheService.CacheAsync(key, widget);
 
             return getResult;
         }
@@ -809,7 +821,7 @@ namespace Remora.Discord.Caching.API
 
             var key = KeyHelpers.CreateGuildWidgetSettingsCacheKey(guildID);
             var widget = modifyResult.Entity;
-            _cacheService.Cache(key, widget);
+            await _cacheService.CacheAsync(key, widget);
 
             return modifyResult;
         }
@@ -829,7 +841,7 @@ namespace Remora.Discord.Caching.API
 
             var key = KeyHelpers.CreateGuildWelcomeScreenCacheKey(guildID);
             var welcomeScreen = getResult.Entity;
-            _cacheService.Cache(key, welcomeScreen);
+            await _cacheService.CacheAsync(key, welcomeScreen);
 
             return getResult;
         }

@@ -34,13 +34,13 @@ namespace Remora.Discord.Caching.API
     /// <inheritdoc />
     public class CachingDiscordRestVoiceAPI : DiscordRestVoiceAPI
     {
-        private readonly CacheService _cacheService;
+        private readonly ICacheService _cacheService;
 
         /// <inheritdoc cref="DiscordRestVoiceAPI(DiscordHttpClient)" />
         public CachingDiscordRestVoiceAPI
         (
             DiscordHttpClient discordHttpClient,
-            CacheService cacheService
+            ICacheService cacheService
         )
             : base(discordHttpClient)
         {
@@ -54,9 +54,10 @@ namespace Remora.Discord.Caching.API
         )
         {
             var key = KeyHelpers.CreateVoiceRegionsCacheKey();
-            if (_cacheService.TryGetValue<IReadOnlyList<IVoiceRegion>>(key, out var cachedInstance))
+            var cache = await _cacheService.GetValueAsync<IReadOnlyList<IVoiceRegion>>(key);
+            if (cache.IsSuccess)
             {
-                return Result<IReadOnlyList<IVoiceRegion>>.FromSuccess(cachedInstance);
+               return Result<IReadOnlyList<IVoiceRegion>>.FromSuccess(cache.Entity);
             }
 
             var listRegions = await base.ListVoiceRegionsAsync(ct);
@@ -66,12 +67,12 @@ namespace Remora.Discord.Caching.API
             }
 
             var regions = listRegions.Entity;
-            _cacheService.Cache(key, regions);
+            await _cacheService.CacheAsync(key, regions);
 
             foreach (var voiceRegion in regions)
             {
                 var regionKey = KeyHelpers.CreateVoiceRegionCacheKey(voiceRegion.ID);
-                _cacheService.Cache(regionKey, voiceRegion);
+                await _cacheService.CacheAsync(regionKey, voiceRegion);
             }
 
             return listRegions;

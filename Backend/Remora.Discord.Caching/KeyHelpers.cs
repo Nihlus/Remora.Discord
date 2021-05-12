@@ -37,9 +37,9 @@ namespace Remora.Discord.Caching
         /// <param name="channelID">The ID of the channel the overwrite is for.</param>
         /// <param name="overwriteID">The ID of the overwrite.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateChannelPermissionCacheKey(in Snowflake channelID, in Snowflake overwriteID)
+        public static CacheKey CreateChannelPermissionCacheKey(in Snowflake channelID, in Snowflake overwriteID)
         {
-            return (typeof(IPermissionOverwrite), overwriteID, CreateChannelCacheKey(channelID));
+            return new(nameof(IPermissionOverwrite), overwriteID, CreateChannelCacheKey(channelID));
         }
 
         /// <summary>
@@ -47,9 +47,9 @@ namespace Remora.Discord.Caching
         /// </summary>
         /// <param name="code">The invite code.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateInviteCacheKey(string code)
+        public static CacheKey CreateInviteCacheKey(string code)
         {
-            return (typeof(IInvite), code);
+            return new(nameof(IInvite), code);
         }
 
         /// <summary>
@@ -57,9 +57,9 @@ namespace Remora.Discord.Caching
         /// </summary>
         /// <param name="guildID">The ID of the guild.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateGuildInvitesCacheKey(in Snowflake guildID)
+        public static CacheKey CreateGuildInvitesCacheKey(in Snowflake guildID)
         {
-            return (typeof(IReadOnlyList<IInvite>), guildID);
+            return new(nameof(IReadOnlyList<IInvite>), guildID);
         }
 
         /// <summary>
@@ -67,9 +67,9 @@ namespace Remora.Discord.Caching
         /// </summary>
         /// <param name="channelID">The ID of the channel.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateChannelCacheKey(in Snowflake channelID)
+        public static CacheKey CreateChannelCacheKey(in Snowflake channelID)
         {
-            return (typeof(IChannel), channelID);
+            return new(nameof(IChannel), channelID);
         }
 
         /// <summary>
@@ -77,9 +77,9 @@ namespace Remora.Discord.Caching
         /// </summary>
         /// <param name="channelID">The ID of the channel.</param>
         /// <returns>The cache key.</returns>
-        public static object CreatePinnedMessagesCacheKey(in Snowflake channelID)
+        public static CacheKey CreatePinnedMessagesCacheKey(in Snowflake channelID)
         {
-            return ("Pinned", typeof(IReadOnlyList<IMessage>), CreateChannelCacheKey(channelID));
+            return new("Pinned", nameof(IReadOnlyList<IMessage>), CreateChannelCacheKey(channelID));
         }
 
         /// <summary>
@@ -88,10 +88,9 @@ namespace Remora.Discord.Caching
         /// <param name="channelID">The ID of the channel the message is in.</param>
         /// <param name="messageID">The ID of the message.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateMessageCacheKey(in Snowflake channelID, in Snowflake messageID)
+        public static CacheKey CreateMessageCacheKey(in Snowflake channelID, in Snowflake messageID)
         {
-            var key = (typeof(IMessage), messageID, CreateChannelCacheKey(channelID));
-            return key;
+            return new(nameof(IMessage), messageID, CreateChannelCacheKey(channelID));
         }
 
         /// <summary>
@@ -100,9 +99,9 @@ namespace Remora.Discord.Caching
         /// <param name="guildID">The ID of the guild the emoji is in.</param>
         /// <param name="emojiID">The ID of the emoji.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateEmojiCacheKey(in Snowflake guildID, in Snowflake emojiID)
+        public static CacheKey CreateEmojiCacheKey(in Snowflake guildID, in Snowflake emojiID)
         {
-            return (typeof(IEmoji), emojiID, CreateGuildCacheKey(guildID));
+            return new(nameof(IEmoji), emojiID, CreateGuildCacheKey(guildID));
         }
 
         /// <summary>
@@ -110,9 +109,9 @@ namespace Remora.Discord.Caching
         /// </summary>
         /// <param name="guildID">The ID of the guild.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateGuildCacheKey(in Snowflake guildID)
+        public static CacheKey CreateGuildCacheKey(in Snowflake guildID)
         {
-            return (typeof(IGuild), guildID);
+            return new(nameof(IGuild), guildID);
         }
 
         /// <summary>
@@ -120,9 +119,9 @@ namespace Remora.Discord.Caching
         /// </summary>
         /// <param name="guildID">The ID of the guild.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateGuildChannelsCacheKey(in Snowflake guildID)
+        public static CacheKey CreateGuildChannelsCacheKey(in Snowflake guildID)
         {
-            return (typeof(IReadOnlyList<IChannel>), guildID);
+            return new(nameof(IReadOnlyList<IChannel>), guildID);
         }
 
         /// <summary>
@@ -130,9 +129,9 @@ namespace Remora.Discord.Caching
         /// </summary>
         /// <param name="guildPreviewID">The ID of the guild preview.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateGuildPreviewCacheKey(in Snowflake guildPreviewID)
+        public static CacheKey CreateGuildPreviewCacheKey(in Snowflake guildPreviewID)
         {
-            return (typeof(IGuildPreview), guildPreviewID);
+            return new(nameof(IGuildPreview), guildPreviewID);
         }
 
         /// <summary>
@@ -141,9 +140,9 @@ namespace Remora.Discord.Caching
         /// <param name="guildID">The ID of the guild the member is in.</param>
         /// <param name="userID">The ID of the member.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateGuildMemberKey(in Snowflake guildID, in Snowflake userID)
+        public static CacheKey CreateGuildMemberKey(in Snowflake guildID, in Snowflake userID)
         {
-            return (typeof(IGuildMember), userID, CreateGuildCacheKey(guildID));
+            return new(nameof(IGuildMember), userID, CreateGuildCacheKey(guildID));
         }
 
         /// <summary>
@@ -154,14 +153,14 @@ namespace Remora.Discord.Caching
         /// <param name="limit">The limit parameter.</param>
         /// <param name="after">The after parameter.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateGuildMembersKey
+        public static CacheKey CreateGuildMembersKey
         (
             in Snowflake guildID,
             in Optional<int> limit,
             in Optional<Snowflake> after
         )
         {
-            return (typeof(IReadOnlyList<IGuildMember>), guildID, limit, after);
+            return new(nameof(IReadOnlyList<IGuildMember>), guildID, limit, after);
         }
 
         /// <summary>
@@ -169,9 +168,9 @@ namespace Remora.Discord.Caching
         /// </summary>
         /// <param name="guildID">The ID of the guild.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateGuildBansCacheKey(in Snowflake guildID)
+        public static CacheKey CreateGuildBansCacheKey(in Snowflake guildID)
         {
-            return (typeof(IReadOnlyList<IBan>), guildID);
+            return new(nameof(IReadOnlyList<IBan>), guildID);
         }
 
         /// <summary>
@@ -180,9 +179,9 @@ namespace Remora.Discord.Caching
         /// <param name="guildID">The ID of the guild the ban is in.</param>
         /// <param name="userID">The ID of the banned user.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateGuildBanCacheKey(in Snowflake guildID, in Snowflake userID)
+        public static CacheKey CreateGuildBanCacheKey(in Snowflake guildID, in Snowflake userID)
         {
-            return (typeof(IBan), userID, CreateGuildCacheKey(guildID));
+            return new(nameof(IBan), userID, CreateGuildCacheKey(guildID));
         }
 
         /// <summary>
@@ -190,9 +189,9 @@ namespace Remora.Discord.Caching
         /// </summary>
         /// <param name="guildID">The ID of the guild.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateGuildRolesCacheKey(in Snowflake guildID)
+        public static CacheKey CreateGuildRolesCacheKey(in Snowflake guildID)
         {
-            return (typeof(IReadOnlyList<IRole>), guildID);
+            return new(nameof(IReadOnlyList<IRole>), guildID);
         }
 
         /// <summary>
@@ -201,9 +200,9 @@ namespace Remora.Discord.Caching
         /// <param name="guildID">The ID of the guild the role is in.</param>
         /// <param name="roleID">The ID of the role.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateGuildRoleCacheKey(in Snowflake guildID, in Snowflake roleID)
+        public static CacheKey CreateGuildRoleCacheKey(in Snowflake guildID, in Snowflake roleID)
         {
-            return (typeof(IRole), roleID, CreateGuildCacheKey(guildID));
+            return new(nameof(IRole), roleID, CreateGuildCacheKey(guildID));
         }
 
         /// <summary>
@@ -211,9 +210,9 @@ namespace Remora.Discord.Caching
         /// </summary>
         /// <param name="guildID">The ID of the guild.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateGuildVoiceRegionsCacheKey(in Snowflake guildID)
+        public static CacheKey CreateGuildVoiceRegionsCacheKey(in Snowflake guildID)
         {
-            return (typeof(IReadOnlyList<IVoiceRegion>), guildID);
+            return new(nameof(IReadOnlyList<IVoiceRegion>), guildID);
         }
 
         /// <summary>
@@ -222,9 +221,9 @@ namespace Remora.Discord.Caching
         /// <param name="guildID">The ID of the guildID the voice region is for.</param>
         /// <param name="voiceRegionID">The voice region ID.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateGuildVoiceRegionCacheKey(in Snowflake guildID, string voiceRegionID)
+        public static CacheKey CreateGuildVoiceRegionCacheKey(in Snowflake guildID, string voiceRegionID)
         {
-            return (typeof(IVoiceRegion), voiceRegionID, CreateGuildCacheKey(guildID));
+            return new(nameof(IVoiceRegion), voiceRegionID, CreateGuildCacheKey(guildID));
         }
 
         /// <summary>
@@ -232,9 +231,9 @@ namespace Remora.Discord.Caching
         /// </summary>
         /// <param name="guildID">The ID of the guild.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateGuildIntegrationsCacheKey(in Snowflake guildID)
+        public static CacheKey CreateGuildIntegrationsCacheKey(in Snowflake guildID)
         {
-            return (typeof(IReadOnlyList<IIntegration>), guildID);
+            return new(nameof(IReadOnlyList<IIntegration>), guildID);
         }
 
         /// <summary>
@@ -243,9 +242,9 @@ namespace Remora.Discord.Caching
         /// <param name="guildID">The ID of the guild the integration is in.</param>
         /// <param name="integrationID">The ID of the integration.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateGuildIntegrationCacheKey(in Snowflake guildID, in Snowflake integrationID)
+        public static CacheKey CreateGuildIntegrationCacheKey(in Snowflake guildID, in Snowflake integrationID)
         {
-            return (typeof(IIntegration), integrationID, CreateGuildCacheKey(guildID));
+            return new(nameof(IIntegration), integrationID, CreateGuildCacheKey(guildID));
         }
 
         /// <summary>
@@ -253,9 +252,9 @@ namespace Remora.Discord.Caching
         /// </summary>
         /// <param name="guildID">The ID of the guild.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateGuildWidgetSettingsCacheKey(in Snowflake guildID)
+        public static CacheKey CreateGuildWidgetSettingsCacheKey(in Snowflake guildID)
         {
-            return (typeof(IGuildWidget), guildID);
+            return new(nameof(IGuildWidget), guildID);
         }
 
         /// <summary>
@@ -263,36 +262,36 @@ namespace Remora.Discord.Caching
         /// </summary>
         /// <param name="userID">The ID of the user.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateUserCacheKey(in Snowflake userID)
+        public static CacheKey CreateUserCacheKey(in Snowflake userID)
         {
-            return (typeof(IUser), userID);
+            return new(nameof(IUser), userID);
         }
 
         /// <summary>
         /// Creates a cache key for the current <see cref="IUser"/> instance.
         /// </summary>
         /// <returns>The cache key.</returns>
-        public static object CreateCurrentUserCacheKey()
+        public static CacheKey CreateCurrentUserCacheKey()
         {
-            return (typeof(IUser), "@me");
+            return new(nameof(IUser), "@me");
         }
 
         /// <summary>
         /// Creates a cache key for the <see cref="IConnection"/> objects of the current <see cref="IUser"/> instance.
         /// </summary>
         /// <returns>The cache key.</returns>
-        public static object CreateCurrentUserConnectionsCacheKey()
+        public static CacheKey CreateCurrentUserConnectionsCacheKey()
         {
-            return (typeof(IReadOnlyList<IConnection>), CreateCurrentUserCacheKey());
+            return new(nameof(IReadOnlyList<IConnection>), CreateCurrentUserCacheKey());
         }
 
         /// <summary>
         /// Creates a cache key for the <see cref="IChannel"/> DM objects of the current <see cref="IUser"/> instance.
         /// </summary>
         /// <returns>The cache key.</returns>
-        public static object CreateCurrentUserDMsCacheKey()
+        public static CacheKey CreateCurrentUserDMsCacheKey()
         {
-            return (typeof(IReadOnlyList<IChannel>), CreateCurrentUserCacheKey());
+            return new(nameof(IReadOnlyList<IChannel>), CreateCurrentUserCacheKey());
         }
 
         /// <summary>
@@ -300,18 +299,18 @@ namespace Remora.Discord.Caching
         /// </summary>
         /// <param name="connectionID">The ID of the connection.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateConnectionCacheKey(string connectionID)
+        public static CacheKey CreateConnectionCacheKey(string connectionID)
         {
-            return (typeof(IConnection), connectionID);
+            return new(nameof(IConnection), connectionID);
         }
 
         /// <summary>
         /// Creates a cache key for the current <see cref="IApplication"/> instance.
         /// </summary>
         /// <returns>The cache key.</returns>
-        public static object CreateCurrentApplicationCacheKey()
+        public static CacheKey CreateCurrentApplicationCacheKey()
         {
-            return (typeof(IApplication), "@me");
+            return new(nameof(IApplication), "@me");
         }
 
         /// <summary>
@@ -319,9 +318,9 @@ namespace Remora.Discord.Caching
         /// </summary>
         /// <param name="templateCode">The template code.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateTemplateCacheKey(string templateCode)
+        public static CacheKey CreateTemplateCacheKey(string templateCode)
         {
-            return (typeof(ITemplate), templateCode);
+            return new(nameof(ITemplate), templateCode);
         }
 
         /// <summary>
@@ -329,18 +328,18 @@ namespace Remora.Discord.Caching
         /// </summary>
         /// <param name="guildID">The ID of the guild..</param>
         /// <returns>The cache key.</returns>
-        public static object CreateGuildTemplatesCacheKey(in Snowflake guildID)
+        public static CacheKey CreateGuildTemplatesCacheKey(in Snowflake guildID)
         {
-            return (typeof(IReadOnlyList<ITemplate>), CreateGuildCacheKey(guildID));
+            return new(nameof(IReadOnlyList<ITemplate>), CreateGuildCacheKey(guildID));
         }
 
         /// <summary>
         /// Creates a cache key for a set of available <see cref="IVoiceRegion"/> instances.
         /// </summary>
         /// <returns>The cache key.</returns>
-        public static object CreateVoiceRegionsCacheKey()
+        public static CacheKey CreateVoiceRegionsCacheKey()
         {
-            return typeof(IReadOnlyList<IVoiceRegion>);
+            return new(nameof(IReadOnlyList<IVoiceRegion>));
         }
 
         /// <summary>
@@ -348,9 +347,9 @@ namespace Remora.Discord.Caching
         /// </summary>
         /// <param name="voiceRegionID">The voice region ID.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateVoiceRegionCacheKey(string voiceRegionID)
+        public static CacheKey CreateVoiceRegionCacheKey(string voiceRegionID)
         {
-            return (typeof(IVoiceRegion), voiceRegionID);
+            return new(nameof(IVoiceRegion), voiceRegionID);
         }
 
         /// <summary>
@@ -358,9 +357,9 @@ namespace Remora.Discord.Caching
         /// </summary>
         /// <param name="webhookID">The webhook ID.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateWebhookCacheKey(in Snowflake webhookID)
+        public static CacheKey CreateWebhookCacheKey(in Snowflake webhookID)
         {
-            return (typeof(IWebhook), webhookID);
+            return new(nameof(IWebhook), webhookID);
         }
 
         /// <summary>
@@ -368,9 +367,9 @@ namespace Remora.Discord.Caching
         /// </summary>
         /// <param name="channelID">The channel ID.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateChannelWebhooksCacheKey(in Snowflake channelID)
+        public static CacheKey CreateChannelWebhooksCacheKey(in Snowflake channelID)
         {
-            return (typeof(IReadOnlyList<IWebhook>), CreateChannelCacheKey(channelID));
+            return new(nameof(IReadOnlyList<IWebhook>), CreateChannelCacheKey(channelID));
         }
 
         /// <summary>
@@ -378,9 +377,9 @@ namespace Remora.Discord.Caching
         /// </summary>
         /// <param name="guildID">The guild ID.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateGuildWebhooksCacheKey(in Snowflake guildID)
+        public static CacheKey CreateGuildWebhooksCacheKey(in Snowflake guildID)
         {
-            return (typeof(IReadOnlyList<IWebhook>), CreateGuildCacheKey(guildID));
+            return new(nameof(IReadOnlyList<IWebhook>), CreateGuildCacheKey(guildID));
         }
 
         /// <summary>
@@ -389,9 +388,9 @@ namespace Remora.Discord.Caching
         /// <param name="guildID">The guild ID.</param>
         /// <param name="userID">The user ID.</param>
         /// <returns>The cache key.</returns>
-        public static object CreatePresenceCacheKey(in Snowflake guildID, in Snowflake userID)
+        public static CacheKey CreatePresenceCacheKey(in Snowflake guildID, in Snowflake userID)
         {
-            return (typeof(IPresence), CreateGuildCacheKey(guildID), CreateUserCacheKey(userID));
+            return new(nameof(IPresence), CreateGuildCacheKey(guildID), CreateUserCacheKey(userID));
         }
 
         /// <summary>
@@ -399,9 +398,9 @@ namespace Remora.Discord.Caching
         /// </summary>
         /// <param name="guildID">The guild ID.</param>
         /// <returns>The cache key.</returns>
-        public static object CreateGuildWelcomeScreenCacheKey(Snowflake guildID)
+        public static CacheKey CreateGuildWelcomeScreenCacheKey(Snowflake guildID)
         {
-            return (typeof(IWelcomeScreen), CreateGuildCacheKey(guildID));
+            return new(nameof(IWelcomeScreen), CreateGuildCacheKey(guildID));
         }
     }
 }

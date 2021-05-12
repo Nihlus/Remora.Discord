@@ -20,12 +20,13 @@
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-using Microsoft.Extensions.Caching.Memory;
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Remora.Discord.API.Abstractions.Rest;
 using Remora.Discord.Caching.API;
+using Remora.Discord.Caching.Clients;
 using Remora.Discord.Caching.Responders;
 using Remora.Discord.Caching.Services;
 using Remora.Discord.Gateway.Extensions;
@@ -42,18 +43,25 @@ namespace Remora.Discord.Caching.Extensions
         /// Adds caching implementations of various API types, overriding the normally non-caching versions.
         /// </summary>
         /// <remarks>
-        /// The cache uses a run-of-the-mill <see cref="IMemoryCache"/>. Cache entry options for any cached type can be
-        /// configured using <see cref="IOptions{CacheSettings}"/>.
+        /// By default the client <see cref="MemoryCacheClient"/> will be used if no other client
+        /// is added to the service collection. To register a new cache client, use
+        /// <see cref="CacheBuilder.UseClient{TClient}"/>.
+        /// </remarks>
+        /// <remarks>
+        /// To use a different cache entry options for any cached type can be configured using
+        /// <see cref="IOptions{CacheSettings}"/>.
         /// </remarks>
         /// <param name="services">The services.</param>
+        /// <param name="configure">Action to configure the caching.</param>
         /// <returns>The services, with caching enabled.</returns>
-        public static IServiceCollection AddDiscordCaching(this IServiceCollection services)
+        public static IServiceCollection AddDiscordCaching(this IServiceCollection services, Action<CacheBuilder>? configure = null)
         {
-            services
-                .AddMemoryCache();
+            configure?.Invoke(new CacheBuilder(services));
 
+            services.AddMemoryCache();
             services.AddOptions<CacheSettings>();
-            services.TryAddSingleton<CacheService>();
+            services.TryAddSingleton<ICacheService, CacheService>();
+            services.TryAddSingleton<ICacheClient, MemoryCacheClient>();
 
             services
                 .Replace(ServiceDescriptor.Singleton<IDiscordRestChannelAPI, CachingDiscordRestChannelAPI>())
