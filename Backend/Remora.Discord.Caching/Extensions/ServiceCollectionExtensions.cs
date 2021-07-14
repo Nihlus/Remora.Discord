@@ -58,15 +58,15 @@ namespace Remora.Discord.Caching.Extensions
             services.TryAddSingleton<CacheService>();
 
             services
-                .Replace(ServiceDescriptor.Singleton<IDiscordRestChannelAPI, CachingDiscordRestChannelAPI>())
-                .Replace(ServiceDescriptor.Singleton<IDiscordRestEmojiAPI, CachingDiscordRestEmojiAPI>())
-                .Replace(ServiceDescriptor.Singleton<IDiscordRestGuildAPI, CachingDiscordRestGuildAPI>())
-                .Replace(ServiceDescriptor.Singleton<IDiscordRestInviteAPI, CachingDiscordRestInviteAPI>())
-                .Replace(ServiceDescriptor.Singleton<IDiscordRestOAuth2API, CachingDiscordRestOAuth2API>())
-                .Replace(ServiceDescriptor.Singleton<IDiscordRestTemplateAPI, CachingDiscordRestTemplateAPI>())
-                .Replace(ServiceDescriptor.Singleton<IDiscordRestUserAPI, CachingDiscordRestUserAPI>())
-                .Replace(ServiceDescriptor.Singleton<IDiscordRestVoiceAPI, CachingDiscordRestVoiceAPI>())
-                .Replace(ServiceDescriptor.Singleton<IDiscordRestWebhookAPI, CachingDiscordRestWebhookAPI>());
+                .Replace(ServiceDescriptor.Transient<IDiscordRestChannelAPI, CachingDiscordRestChannelAPI>())
+                .Replace(ServiceDescriptor.Transient<IDiscordRestEmojiAPI, CachingDiscordRestEmojiAPI>())
+                .Replace(ServiceDescriptor.Transient<IDiscordRestGuildAPI, CachingDiscordRestGuildAPI>())
+                .Replace(ServiceDescriptor.Transient<IDiscordRestInviteAPI, CachingDiscordRestInviteAPI>())
+                .Replace(ServiceDescriptor.Transient<IDiscordRestOAuth2API, CachingDiscordRestOAuth2API>())
+                .Replace(ServiceDescriptor.Transient<IDiscordRestTemplateAPI, CachingDiscordRestTemplateAPI>())
+                .Replace(ServiceDescriptor.Transient<IDiscordRestUserAPI, CachingDiscordRestUserAPI>())
+                .Replace(ServiceDescriptor.Transient<IDiscordRestVoiceAPI, CachingDiscordRestVoiceAPI>())
+                .Replace(ServiceDescriptor.Transient<IDiscordRestWebhookAPI, CachingDiscordRestWebhookAPI>());
 
             services
                 .AddResponder<EarlyCacheResponder>(ResponderGroup.Early)

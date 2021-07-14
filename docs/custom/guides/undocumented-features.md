@@ -103,22 +103,29 @@ public record SomeUndocumentedEvent(int SomeName) : ISomeUndocumentedEvent;
 ```
 
 ## REST
-Features that relate to the REST API is customized through the 
-`DiscordHttpClient` type, which can be accessed and used through DI. It's a 
-named, scoped `HttpClient`, which takes care of minutia like authorization 
-headers and respecting rate limits for you.
+Features that relate to the REST API is customized through one of two methods.
+
+The first is the `DiscordHttpClient` type, which can be accessed and used 
+through DI. It's a named, transient `HttpClient`, which takes care of minutia 
+like authorization headers and respecting rate limits for you. You would mainly
+use this type when you want to make requests to completely undocumented
+endpoints, or to take complete control over a call to a known endpoint.
 
 ```cs
 public class Somewhere
 {
     private readonly DiscordHttpClient _client;
-    
+
     public Somewhere(DiscordHttpClient client)
     {
         _client = client;
     }
 }
 ```
+
+The second is through the concrete implementations of the API interfaces, which
+allow you to perform smaller tweaks or changes to existing API methods, such as
+adding headers or JSON payload fields.
 
 ### Undocumented Endpoints
 To access an undocumented endpoint, you may use the `DiscordHttpClient` directly
@@ -138,14 +145,21 @@ of how to add JSON parameters, HTTP headers, or similar data.
 ### Undocumented Parameters & Headers
 If you want to provide additional data to an existing endpoint, such as JSON
 parameters, HTTP headers, or query string parameters, you can easily add
-customizations to *all* requests made by the client within a particular scope.
+customizations to *all* requests made by the API within a particular scope. This
+feature is only available to you when you inject the concrete implementation of 
+an API category, however, and not through the interface.
+
+This means that if you want to, for example, send an additional JSON field when
+sending a message, you would need to inject `DiscordRestChannelAPI` and not 
+`IDiscordRestChannelAPI`.
 
 This is useful when an endpoint is discovered to allow undocumented parameters,
 or metadata headers such as `X-Audit-Log-Reason`.
 
-To create a customization, use the `AddCustomization` method.
+Once you have the concrete implementation available to you, creating a 
+customization is simple.
 ```cs
-using (_ = _client.AddCustomization(r => r.WithJson(json => json.WriteString("name", "value"))))
+using (_ = _api.WithCustomization(r => r.WithJson(json => json.WriteString("name", "value"))))
 {
     // This call will now have "name": "value" in its JSON payload, in addition
     // to the normal data.

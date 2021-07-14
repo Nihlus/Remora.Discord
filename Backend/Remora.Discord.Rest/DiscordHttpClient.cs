@@ -42,22 +42,22 @@ namespace Remora.Discord.Rest
     [PublicAPI]
     public class DiscordHttpClient
     {
-        private readonly HttpClient _httpClient;
+        private readonly IHttpClientFactory _httpClientFactory;
         private readonly JsonSerializerOptions _serializerOptions;
         private readonly List<DiscordRequestCustomization> _customizations;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DiscordHttpClient"/> class.
         /// </summary>
-        /// <param name="httpClient">The Http client.</param>
+        /// <param name="httpClientFactory">The Http client factory.</param>
         /// <param name="serializerOptions">The serialization options.</param>
         public DiscordHttpClient
         (
-            HttpClient httpClient,
+            IHttpClientFactory httpClientFactory,
             IOptions<JsonSerializerOptions> serializerOptions
         )
         {
-            _httpClient = httpClient;
+            _httpClientFactory = httpClientFactory;
             _serializerOptions = serializerOptions.Value;
             _customizations = new List<DiscordRequestCustomization>();
         }
@@ -68,7 +68,7 @@ namespace Remora.Discord.Rest
         /// </summary>
         /// <param name="requestCustomizer">The action that customizes the request.</param>
         /// <returns>The created customization.</returns>
-        public DiscordRequestCustomization AddCustomization(Action<RestRequestBuilder> requestCustomizer)
+        public DiscordRequestCustomization WithCustomization(Action<RestRequestBuilder> requestCustomizer)
         {
             var customization = new DiscordRequestCustomization(this, requestCustomizer);
             _customizations.Add(customization);
@@ -116,8 +116,9 @@ namespace Remora.Discord.Rest
 
             try
             {
+                var httpClient = _httpClientFactory.CreateClient("Discord");
                 using var request = requestBuilder.Build();
-                using var response = await _httpClient.SendAsync
+                using var response = await httpClient.SendAsync
                 (
                     request,
                     HttpCompletionOption.ResponseHeadersRead,
@@ -160,8 +161,9 @@ namespace Remora.Discord.Rest
 
             try
             {
+                var httpClient = _httpClientFactory.CreateClient("Discord");
                 using var request = requestBuilder.Build();
-                using var response = await _httpClient.SendAsync
+                using var response = await httpClient.SendAsync
                 (
                     request,
                     HttpCompletionOption.ResponseHeadersRead,
@@ -214,8 +216,9 @@ namespace Remora.Discord.Rest
 
             try
             {
+                var httpClient = _httpClientFactory.CreateClient("Discord");
                 using var request = requestBuilder.Build();
-                using var response = await _httpClient.SendAsync
+                using var response = await httpClient.SendAsync
                 (
                     request,
                     HttpCompletionOption.ResponseHeadersRead,
@@ -258,8 +261,9 @@ namespace Remora.Discord.Rest
 
             try
             {
+                var httpClient = _httpClientFactory.CreateClient("Discord");
                 using var request = requestBuilder.Build();
-                using var response = await _httpClient.SendAsync
+                using var response = await httpClient.SendAsync
                 (
                     request,
                     HttpCompletionOption.ResponseHeadersRead,
@@ -305,8 +309,9 @@ namespace Remora.Discord.Rest
 
             try
             {
+                var httpClient = _httpClientFactory.CreateClient("Discord");
                 using var request = requestBuilder.Build();
-                using var response = await _httpClient.SendAsync
+                using var response = await httpClient.SendAsync
                 (
                     request,
                     HttpCompletionOption.ResponseHeadersRead,
@@ -349,8 +354,9 @@ namespace Remora.Discord.Rest
 
             try
             {
+                var httpClient = _httpClientFactory.CreateClient("Discord");
                 using var request = requestBuilder.Build();
-                using var response = await _httpClient.SendAsync
+                using var response = await httpClient.SendAsync
                 (
                     request,
                     HttpCompletionOption.ResponseHeadersRead,
@@ -393,8 +399,9 @@ namespace Remora.Discord.Rest
 
             try
             {
+                var httpClient = _httpClientFactory.CreateClient("Discord");
                 using var request = requestBuilder.Build();
-                using var response = await _httpClient.SendAsync
+                using var response = await httpClient.SendAsync
                 (
                     request,
                     HttpCompletionOption.ResponseHeadersRead,
@@ -440,8 +447,9 @@ namespace Remora.Discord.Rest
 
             try
             {
+                var httpClient = _httpClientFactory.CreateClient("Discord");
                 using var request = requestBuilder.Build();
-                using var response = await _httpClient.SendAsync
+                using var response = await httpClient.SendAsync
                 (
                     request,
                     HttpCompletionOption.ResponseHeadersRead,
@@ -487,8 +495,9 @@ namespace Remora.Discord.Rest
 
             try
             {
+                var httpClient = _httpClientFactory.CreateClient("Discord");
                 using var request = requestBuilder.Build();
-                using var response = await _httpClient.SendAsync
+                using var response = await httpClient.SendAsync
                 (
                     request,
                     HttpCompletionOption.ResponseHeadersRead,
@@ -531,8 +540,9 @@ namespace Remora.Discord.Rest
 
             try
             {
+                var httpClient = _httpClientFactory.CreateClient("Discord");
                 using var request = requestBuilder.Build();
-                using var response = await _httpClient.SendAsync
+                using var response = await httpClient.SendAsync
                 (
                     request,
                     HttpCompletionOption.ResponseHeadersRead,

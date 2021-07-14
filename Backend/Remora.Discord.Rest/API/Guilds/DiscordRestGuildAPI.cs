@@ -57,6 +57,12 @@ namespace Remora.Discord.Rest.API
             _jsonOptions = jsonOptions.Value;
         }
 
+        /// <inheritdoc cref="DiscordHttpClient.WithCustomization"/>
+        public DiscordRequestCustomization WithCustomization(Action<RestRequestBuilder> requestCustomizer)
+        {
+            return _discordHttpClient.WithCustomization(requestCustomizer);
+        }
+
         /// <inheritdoc />
         public virtual async Task<Result<IGuild>> CreateGuildAsync
         (

@@ -20,6 +20,7 @@
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -43,6 +44,12 @@ namespace Remora.Discord.Rest.API
         public DiscordRestInviteAPI(DiscordHttpClient discordHttpClient)
         {
             _discordHttpClient = discordHttpClient;
+        }
+
+        /// <inheritdoc cref="DiscordHttpClient.WithCustomization"/>
+        public DiscordRequestCustomization WithCustomization(Action<RestRequestBuilder> requestCustomizer)
+        {
+            return _discordHttpClient.WithCustomization(requestCustomizer);
         }
 
         /// <inheritdoc />

@@ -111,7 +111,7 @@ namespace Remora.Discord.Rest.Tests.TestBases
                     .Respond("application/json", "1")
             );
 
-            using (_ = client.AddCustomization(r => r.WithJson(json => json.WriteString("name", "value"))))
+            using (_ = client.WithCustomization(r => r.WithJson(json => json.WriteString("name", "value"))))
             {
                 var result = await this.RequestFunction(client, "https://unit-test");
                 Assert.True(result.IsSuccess);
@@ -144,7 +144,7 @@ namespace Remora.Discord.Rest.Tests.TestBases
                 }
             );
 
-            using (_ = client.AddCustomization(r => r.WithJson(json => json.WriteString("name", "value"))))
+            using (_ = client.WithCustomization(r => r.WithJson(json => json.WriteString("name", "value"))))
             {
                 var result = await this.RequestFunction(client, "https://unit-test");
                 Assert.True(result.IsSuccess);

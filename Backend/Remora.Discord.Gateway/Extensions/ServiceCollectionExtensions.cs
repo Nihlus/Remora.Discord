@@ -56,10 +56,11 @@ namespace Remora.Discord.Gateway.Extensions
                 .AddDiscordRest(tokenFactory);
 
             serviceCollection.TryAddSingleton<Random>();
-            serviceCollection.TryAddTransient<ClientWebSocket>();
-            serviceCollection.TryAddSingleton<IPayloadTransportService, WebSocketPayloadTransportService>();
-            serviceCollection.TryAddSingleton<DiscordGatewayClient>();
             serviceCollection.TryAddSingleton<IResponderTypeRepository>(s => s.GetRequiredService<IOptions<ResponderService>>().Value);
+            serviceCollection.TryAddSingleton<DiscordGatewayClient>();
+
+            serviceCollection.TryAddTransient<ClientWebSocket>();
+            serviceCollection.TryAddTransient<IPayloadTransportService, WebSocketPayloadTransportService>();
 
             return serviceCollection;
         }

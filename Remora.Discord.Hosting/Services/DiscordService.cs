@@ -23,6 +23,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Remora.Discord.Gateway;
@@ -43,7 +44,7 @@ namespace Remora.Discord.Hosting.Services
         /// <summary>
         /// Initializes a new instance of the <see cref="DiscordService"/> class.
         /// </summary>
-        /// <param name="gatewayClient">The <see cref="DiscordGatewayClient"/>.</param>
+        /// <param name="gatewayClient">The gateway client.</param>
         /// <param name="logger">The <see cref="ILogger"/>.</param>
         public DiscordService(DiscordGatewayClient gatewayClient, ILogger<DiscordService> logger)
         {

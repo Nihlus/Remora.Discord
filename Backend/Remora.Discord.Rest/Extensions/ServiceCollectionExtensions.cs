@@ -62,10 +62,29 @@ namespace Remora.Discord.Rest.Extensions
             serviceCollection
                 .AddDiscordApi();
 
+            serviceCollection
+                .AddSingleton<ITokenStore>(serviceProvider => new TokenStore(tokenFactory(serviceProvider)));
+
+            serviceCollection.TryAddTransient<DiscordHttpClient>();
+            serviceCollection.TryAddTransient<IDiscordRestAuditLogAPI, DiscordRestAuditLogAPI>();
+            serviceCollection.TryAddTransient<IDiscordRestChannelAPI, DiscordRestChannelAPI>();
+            serviceCollection.TryAddTransient<IDiscordRestEmojiAPI, DiscordRestEmojiAPI>();
+            serviceCollection.TryAddTransient<IDiscordRestGatewayAPI, DiscordRestGatewayAPI>();
+            serviceCollection.TryAddTransient<IDiscordRestGuildAPI, DiscordRestGuildAPI>();
+            serviceCollection.TryAddTransient<IDiscordRestInviteAPI, DiscordRestInviteAPI>();
+            serviceCollection.TryAddTransient<IDiscordRestUserAPI, DiscordRestUserAPI>();
+            serviceCollection.TryAddTransient<IDiscordRestVoiceAPI, DiscordRestVoiceAPI>();
+            serviceCollection.TryAddTransient<IDiscordRestWebhookAPI, DiscordRestWebhookAPI>();
+            serviceCollection.TryAddTransient<IDiscordRestTemplateAPI, DiscordRestTemplateAPI>();
+            serviceCollection.TryAddTransient<IDiscordRestInteractionAPI, DiscordRestInteractionAPI>();
+            serviceCollection.TryAddTransient<IDiscordRestApplicationAPI, DiscordRestApplicationAPI>();
+            serviceCollection.TryAddTransient<IDiscordRestOAuth2API, DiscordRestOAuth2API>();
+            serviceCollection.TryAddTransient<IDiscordRestStageInstanceAPI, DiscordRestStageInstanceAPI>();
+
             var rateLimitPolicy = DiscordRateLimitPolicy.Create();
             var retryDelay = Backoff.DecorrelatedJitterBackoffV2(TimeSpan.FromSeconds(1), 5);
             var clientBuilder = serviceCollection
-                .AddHttpClient<DiscordHttpClient>
+                .AddHttpClient
                 (
                     "Discord",
                     (services, client) =>
@@ -118,24 +137,6 @@ namespace Remora.Discord.Rest.Extensions
 
             // Run extra user-provided client building operations.
             buildClient?.Invoke(clientBuilder);
-
-            serviceCollection
-                .AddSingleton<ITokenStore>(serviceProvider => new TokenStore(tokenFactory(serviceProvider)));
-
-            serviceCollection.TryAddSingleton<IDiscordRestAuditLogAPI, DiscordRestAuditLogAPI>();
-            serviceCollection.TryAddSingleton<IDiscordRestChannelAPI, DiscordRestChannelAPI>();
-            serviceCollection.TryAddSingleton<IDiscordRestEmojiAPI, DiscordRestEmojiAPI>();
-            serviceCollection.TryAddSingleton<IDiscordRestGatewayAPI, DiscordRestGatewayAPI>();
-            serviceCollection.TryAddSingleton<IDiscordRestGuildAPI, DiscordRestGuildAPI>();
-            serviceCollection.TryAddSingleton<IDiscordRestInviteAPI, DiscordRestInviteAPI>();
-            serviceCollection.TryAddSingleton<IDiscordRestUserAPI, DiscordRestUserAPI>();
-            serviceCollection.TryAddSingleton<IDiscordRestVoiceAPI, DiscordRestVoiceAPI>();
-            serviceCollection.TryAddSingleton<IDiscordRestWebhookAPI, DiscordRestWebhookAPI>();
-            serviceCollection.TryAddSingleton<IDiscordRestTemplateAPI, DiscordRestTemplateAPI>();
-            serviceCollection.TryAddSingleton<IDiscordRestInteractionAPI, DiscordRestInteractionAPI>();
-            serviceCollection.TryAddSingleton<IDiscordRestApplicationAPI, DiscordRestApplicationAPI>();
-            serviceCollection.TryAddSingleton<IDiscordRestOAuth2API, DiscordRestOAuth2API>();
-            serviceCollection.TryAddSingleton<IDiscordRestStageInstanceAPI, DiscordRestStageInstanceAPI>();
 
             return serviceCollection;
         }
