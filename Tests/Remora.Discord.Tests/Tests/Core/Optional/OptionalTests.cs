@@ -199,6 +199,92 @@ namespace Remora.Discord.Tests.Tests.Core
         }
 
         /// <summary>
+        /// Tests the <see cref="Optional{TValue}.ToString"/> method.
+        /// </summary>
+        public new class ToString
+        {
+            [Fact]
+            public void ResultContainsValueIfValueTypeOptionalContainsValue()
+            {
+                var optional = new Optional<int>(64);
+
+                Assert.Contains(64.ToString(), optional.ToString());
+            }
+
+            [Fact]
+            public void ResultIsEmptyIfValueTypeOptionalDoesNotContainValue()
+            {
+                var optional = default(Optional<int>);
+
+                Assert.Equal("Empty", optional.ToString());
+            }
+
+            [Fact]
+            public void ResultContainsValueIfNullableValueTypeOptionalContainsValue()
+            {
+                var optional = new Optional<int?>(64);
+
+                Assert.Contains(64.ToString(), optional.ToString());
+            }
+
+            [Fact]
+            public void ResultContainsNullIfNullableValueTypeOptionalContainsNullValue()
+            {
+                var optional = new Optional<int?>(null);
+
+                Assert.Contains("null", optional.ToString());
+            }
+
+            [Fact]
+            public void ResultIsEmptyIfNullableValueTypeOptionalDoesNotContainValue()
+            {
+                var optional = default(Optional<int?>);
+
+                Assert.Equal("Empty", optional.ToString());
+            }
+
+            [Fact]
+            public void ResultContainsValueIfReferenceTypeOptionalContainsValue()
+            {
+                var optional = new Optional<string>("Hello world!");
+
+                Assert.Contains("Hello world!", optional.ToString());
+            }
+
+            [Fact]
+            public void ResultIsEmptyIfReferenceTypeOptionalDoesNotContainValue()
+            {
+                var optional = default(Optional<string>);
+
+                Assert.Equal("Empty", optional.ToString());
+            }
+
+            [Fact]
+            public void ResultContainsValueIfNullableReferenceTypeOptionalContainsValue()
+            {
+                var optional = new Optional<string?>("Hello world!");
+
+                Assert.Contains("Hello world!", optional.ToString());
+            }
+
+            [Fact]
+            public void ResultContainsNullIfNullableReferenceTypeOptionalContainsNullValue()
+            {
+                var optional = new Optional<string?>(null);
+
+                Assert.Contains("null", optional.ToString());
+            }
+
+            [Fact]
+            public void ResultIsEmptyIfNullableReferenceTypeOptionalDoesNotContainValue()
+            {
+                var optional = default(Optional<string?>);
+
+                Assert.Equal("Empty", optional.ToString());
+            }
+        }
+
+        /// <summary>
         /// Tests the implicit operator.
         /// </summary>
         public class ImplicitOperator
